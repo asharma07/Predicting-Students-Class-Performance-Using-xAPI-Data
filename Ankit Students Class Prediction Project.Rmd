@@ -1,0 +1,203 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r}
+# Importing Dataset
+edudata <- read.csv("dataset.csv")
+```
+```{r}
+# Imporitng the libraries
+library(ggplot2)
+library(reshape2)
+library(corrplot)
+library(MASS)
+library(nnet)
+```
+
+```{r}
+# Renaming the Columns
+colnames(edudata)[colnames(edudata)=="gender"] <- "Gender"
+colnames(edudata)[colnames(edudata)=="NationalITy"] <- "Nationality"
+colnames(edudata)[colnames(edudata)=="raisedhands"] <- "RaisedHands"
+colnames(edudata)[colnames(edudata)=="VisITedResources"] <- "VisitedResources"
+edudata$Class <- factor(edudata$Class, levels = c("L","M","H"))
+```
+
+
+```{r}
+# Exploratory Data Analysis
+summary(edudata)
+```
+```{r}
+# Finding any missing values
+sapply(edudata, function(x) { sum(is.na(x))})
+```
+
+```{r}
+# Student Class Performance
+ggplot(data = edudata, aes(x = Class, fill = Class)) + geom_bar()+ggtitle("Students counts based on marks obtained")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Students Count")
+```
+We can conculde that Maximum students performance is in Middle Class. That means most of the student marks/grades are in interval between 70 to 89,
+
+```{r}
+# Gender based Class performance Calculation
+ggplot(data = edudata, aes(x = Class, fill = Gender)) + geom_bar() +ggtitle("No of Males and Femles students based on marks obtained")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Males and Females Count")
+```
+From the plot we can conculde that very few female students are there in low class grade whereas males have higher ratio of lower grades. Therefore, they are categorize under low class.
+
+```{r}
+# Student Topics baseed on Class
+ggplot(data = edudata, aes(x = Class, fill = Topic)) + geom_bar(position = "dodge")+ggtitle("Subjects by Class")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Student Count")
+```
+
+Most students are studying IT in M and L class. In H class most students are studying French.
+
+
+```{r}
+# Student count based on Gender for Topics
+ggplot(data = edudata, aes(x = Topic, fill = Gender)) + geom_bar(position = "dodge")+ggtitle("Males and Females count based on subjects")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Males and Females Count")
+```
+IT has most number of males student
+
+# Box Plots
+```{r}
+# Students that visit more resources posted by instructor gets higher marks
+ggplot(data = edudata, aes(x = Class, fill = Class, y = VisitedResources)) + geom_boxplot() +
+    labs(x = "Class", y = "Visited Resources") + 
+    scale_y_continuous(breaks = seq(0,100,5))+ggtitle("No of Visted Resources per Class")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Visited Resources")
+```
+From the box plot we can see that on average student that visited resources online got higher grades.Lower Class perofrmance and Higher class peroformance students have few outliers.
+
+```{r}
+# Box plot for Discussion post and students grades
+ggplot(data = edudata, aes(x = Class, fill= Class, y = Discussion)) + geom_boxplot() +
+    labs(x = "Class", y = "Discussion Post") + 
+    scale_y_continuous(breaks = seq(0,100,5))+ggtitle("No of Discussion Post per Class")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Discussion")
+```
+From the box plot we can see that the student who gets higher marks in class participates more in disucssion forums and lower grades student participate less in discussion formums.
+
+```{r}
+# Box plot for Announcement view and students grades
+ggplot(data = edudata, aes(x = Class, fill = Class, y = AnnouncementsView)) + geom_boxplot() +
+    labs(x = "Class", y = "Announcement View") + 
+    scale_y_continuous(breaks = seq(0,100,5))+ggtitle("Announcements Views per Class")+theme_classic()+
+  theme(plot.title = element_text(hjust = 0.5))+ylab("Announcement View")
+```
+High marks students visits more announcments views
+
+# Corelation Analysis
+
+```{r}
+correlation <- cor(edudata[,c("RaisedHands","Discussion","VisitedResources","AnnouncementsView")])
+corrplot(correlation,type="upper", method = "number")
+```
+
+
+```{r}
+cor(edudata[,c("RaisedHands","Discussion","VisitedResources","AnnouncementsView")])
+```
+
+
+
+# Statistical Tests
+
+```{r}
+attach(edudata)
+```
+Visited Resources 
+Null hypothesis: There is no difference between mean visited resources hands between males and female. 
+Alternative hypothesis: There is difference between mean visited resources between males and female.
+
+```{r}
+# Performing T test to find the meann difference between teh visited resources online for males and females
+t.test(VisitedResources~Gender)
+```
+
+
+Announcement Views
+Null hypothesis: There is no difference between announcement views between male and females. 
+Alternative hypothesis: There is difference between announcement views between male and females.
+
+```{r}
+# Performing T test for students viewing announcment with gender
+t.test(AnnouncementsView~Gender)
+```
+
+
+Discussion
+Null hypothesis: There is no difference between announcement views between male and females. 
+Alternative hypothesis: There is difference between announcement views between male and females.
+
+```{r}
+t.test(Discussion~Gender)
+```
+
+
+# One Way ANOVA 
+
+Null hypothesis: There is no difference among mean visited resources by Class. 
+Alternative hypothesis: There is difference between at least two groups mean visited resources by Class.
+```{r}
+fit <- aov(VisitedResources~Class)
+summary(fit)
+```
+
+ 
+Null hypothesis: There is no difference among mean announcement views by Class. 
+Alternative hypothesis: There is difference between at least two groups mean announcement views by Class.
+
+```{r}
+fit <- aov(AnnouncementsView~Class)
+summary(fit)
+```
+
+
+Null hypothesis: There is no difference among mean discussionby Class. 
+Alternative hypothesis: There is difference between at least two groups mean discussionby Class.
+```{r}
+fit <- aov(Discussion~Class)
+summary(fit)
+```
+
+# Multinomial Logistic Regression 
+
+```{r}
+# Multinomial Logistic Regression
+model <- multinom(Class ~ RaisedHands + VisitedResources + AnnouncementsView + Discussion , data = edudata)
+```
+
+
+```{r}
+summary(model)
+```
+
+```{r}
+# Finding P Value for the model
+z <- summary(model)$coefficients/summary(model)$standard.errors
+z
+```
+
+```{r}
+#  Performing 2 Tailed Z Test 
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+```{r}
+# Extract the coefficients from the model and exponentiate
+exp(coef(model))
+```
+
+```{r}
+# Finding predicted Propbabilites
+head(pp <- fitted(model))
+```
+
