@@ -1,2 +1,2 @@
-# Predicting-Students-Class-Performance-Using-xAPI-Data
+# Predicting-Students-Class-Performance-Using-Experience (xAPI)-Data
 Online Learning Industry is evolving constantly. There are tons of data available that can be used to find hidden insights from student learning activities and behavioral features. In this project, I have tried to predict and evaluate students class performance based on students behavioral features. I hope you find my code useful. Thank You, 
